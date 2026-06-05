@@ -1,4 +1,4 @@
-name: Smoke Tests
+name: Smoke Test
 
 on:
   push:
@@ -34,6 +34,8 @@ jobs:
         python tests/get_data_from_hf.py
 
     - name: Run App and Compare Output
+      env:
+        MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
       run: |
         # 1. Check if the test data directory exists and is not empty
         if [ ! -d "./tests/data" ] || [ -z "$(ls -A ./tests/data)" ]; then
