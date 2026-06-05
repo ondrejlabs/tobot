@@ -1,0 +1,5 @@
+isin,ticker,security_name,currency,tax_rate
+US46429B6636,HDV,iShares Core High Dividend ETF,USD,0.0035
+IE0006WW1TQ4,EXUS,Xtrackers MSCI World ex USA UCITS ETF,EUR,0.0012
+IE00BD1F4L37,QDVB,iShares Edge MSCI USA Quality Factor UCITS ETF,EUR,0.0012
+JE00BN2CJ301,WGLD,WisdomTree Core Physical Gold ETC,EUR,0.0012

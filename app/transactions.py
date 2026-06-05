@@ -64,6 +64,16 @@ def run_transaction_job(folder_path: str | Path) -> str:
     df['tax'] = df['value'] / df['fx_rate'] * df['tax_rate']
     assert isinstance(df, pd.DataFrame)
 
+    # Sort Intermediate CSV
+    # Ensure 'filename' exists and has no NaNs to avoid sorting errors
+    if 'filename' not in df.columns:
+        df['filename'] = 'unknown'
+    else:
+        df['filename'] = df['filename'].fillna('unknown')
+
+    # Sort by filename (a-z), then by original position
+    df = df.sort_values(by=['filename', 'position'], ascending=[True, True])
+
     # Determine the target filename postfix based on the dates
     target_period = get_target_period(df)
 
@@ -72,6 +82,7 @@ def run_transaction_job(folder_path: str | Path) -> str:
     df.to_csv(csv_filepath, index=False)
 
     logger.info(f"Saved list of transactions to '{csv_filename}'")
+    print("List of mapped transactions:")
     print(df)
 
     # Sort the DataFrame before summarizing to ensure consistent output order
@@ -116,7 +127,7 @@ def run_transaction_job(folder_path: str | Path) -> str:
 
     # Notify the user about the saved summary and print it to the console
     logger.info(f"Saved TOB summary to '{summary_filename}'")
-    print("\n".join(summary_output))
+    #print("\n".join(summary_output))
 
     return "\n".join(summary_output)
 

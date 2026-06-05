@@ -37,7 +37,7 @@ jobs:
       env:
         MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
       run: |
-        # 1. Check if the test data directory exists and is not empty
+        # Check if the test data directory exists and is not empty
         if [ ! -d "./tests/data" ] || [ -z "$(ls -A ./tests/data)" ]; then
           echo "Notice: Test data is missing or empty. Skipping smoke tests (expected on public forks)."
           exit 0
@@ -45,15 +45,19 @@ jobs:
 
         echo "Test data found. Running smoke test..."
 
-        # 2. Run your application and save the output to a temporary file
+        # Overwrite the default mapping file with the test-specific mapping file
+        echo "Applying test mapping rules..."
+        cp -f ./tests/mapping.csv ./mapping.csv
+
+        # Run the application and save the output to a temporary file
         python main.py -f ./tests/data > ./tests/actual_output.txt
 
-        # 3. Compare the generated output against your reference file
-        # 'diff -u' shows a unified diff if differences are found
-        #if diff -u tests/reference_output.txt tests/actual_output.txt; then
-        #  echo "Success: Output matches reference perfectly."
-        #  exit 0
-        #else
-        #  echo "Failure: Output does not match reference."
-        #  exit 1
-        #fi
+        # Compare the "Total Tax:" lines against the reference file
+        # 'diff -u' shows a unified diff in the CI logs if differences are found
+        if diff -u <(grep "Total Tax:" tests/reference_output.txt | sort) <(grep "Total Tax:" tests/actual_output.txt | sort); then
+          echo "Success: 'Total Tax' lines match the reference perfectly."
+          exit 0
+        else
+          echo "Failure: 'Total Tax' lines do not match the reference."
+          exit 1
+        fi

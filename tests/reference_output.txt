@@ -1,0 +1,22 @@
+--- Tax Rate: 0.12% ---
+Total Tax: 22.38
+Number of Operations: 6
+Total Value (EUR): .
+Total Fees (EUR): .
+Transactions:
+      date ticker    value  fee fx_rate  tax
+.
+.
+.
+.
+.
+.
+
+--- Tax Rate: 0.35% ---
+Total Tax: 13.20
+Number of Operations: 1
+Total Value (EUR): .
+Total Fees (EUR): .
+Transactions:
+      date ticker    value  fee fx_rate   tax
+.
