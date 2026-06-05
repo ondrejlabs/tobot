@@ -1,5 +1,5 @@
 --- Tax Rate: 0.12% ---
-Total Tax: 22.38
+Total Tax: 22.48
 Number of Operations: 6
 Total Value (EUR): .
 Total Fees (EUR): .
@@ -13,7 +13,7 @@ Transactions:
 .
 
 --- Tax Rate: 0.35% ---
-Total Tax: 13.20
+Total Tax: 13.40
 Number of Operations: 1
 Total Value (EUR): .
 Total Fees (EUR): .
