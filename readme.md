@@ -105,7 +105,7 @@ TOBot is built on a hybrid extraction pipeline designed to maximize accuracy whi
     direction TB
     
     class TradeExtraction {
-        +Optional~str~ broker
+        +str broker
         +List~Trade~ trades
         +model_dump() dict
         +model_validate_json() TradeExtraction
@@ -114,23 +114,23 @@ TOBot is built on a hybrid extraction pipeline designed to maximize accuracy whi
     class Trade {
         +int position
         +str date
-        +Optional~str~ isin
-        +Optional~str~ ticker
-        +Optional~str~ security_name
+        +str isin
+        +str ticker
+        +str security_name
         +float quantity
-        +Optional~float~ price
-        +Optional~float~ value
-        +Optional~float~ fee
-        +Optional~str~ currency
+        +float price
+        +float value
+        +float fee
+        +str currency
         +float tax_rate
-        +Optional~str~ extra_info
+        +str extra_info
         +str original_text
         +validate_and_clean_data() Trade
     }
 
     TradeExtraction "1" *-- "many" Trade : contains
   ````
-  
+
   Beyond schema enforcement, a `model_validator` performs post-extraction arithmetic checks:
   If both `quantity` and `price` are present, the validator independently recalculates the expected transaction value and overwrites any extracted total that deviates significantly — catching silent OCR errors that would otherwise quietly corrupt the final tax figures.
   It also normalises edge cases like null or negative fees and emits warnings when a fee looks anomalously high relative to the transaction value (configurable via `fee_threshold` and `fee_ratio_threshold` in `config.toml`).
