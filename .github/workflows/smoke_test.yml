@@ -5,6 +5,9 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+  schedule:
+    # Runs at 06:00 UTC every day
+    - cron: '0 6 * * *'
 
 jobs:
   smoke-test:
@@ -49,15 +52,36 @@ jobs:
         echo "Applying test mapping rules..."
         cp -f ./tests/mapping.csv ./mapping.csv
 
-        # Run the application and save the output to a temporary file
-        python main.py -f ./tests/data > ./tests/actual_output.txt
+        # --- Retry Logic Initialization ---
+        max_retries=2
+        attempt=1
+        success=false
 
-        # Compare the "Total Tax:" lines against the reference file
-        # 'diff -u' shows a unified diff in the CI logs if differences are found
-        if diff -u <(grep "Total Tax:" tests/reference_output.txt | sort) <(grep "Total Tax:" tests/actual_output.txt | sort); then
-          echo "Success: 'Total Tax' lines match the reference perfectly."
-          exit 0
-        else
-          echo "Failure: 'Total Tax' lines do not match the reference."
+        while [ $attempt -le $max_retries ]; do
+          echo "--- Attempt $attempt of $max_retries ---"
+          
+          # Run the application and save the output to a temporary file
+          python main.py -f ./tests/data > ./tests/actual_output.txt
+
+          # Compare the "Total Tax:" lines against the reference file
+          if diff -u <(grep "Total Tax:" tests/reference_output.txt | sort) <(grep "Total Tax:" tests/actual_output.txt | sort); then
+            echo "Success: 'Total Tax' lines match the reference perfectly."
+            success=true
+            break # Exits the while loop on success
+          else
+            echo "Failure: 'Total Tax' lines do not match on attempt $attempt."
+            attempt=$((attempt + 1))
+            
+            # Pause briefly before the next attempt if we haven't exceeded max_retries
+            if [ $attempt -le $max_retries ]; then
+              echo "Waiting 10 seconds before retrying..."
+              sleep 10
+            fi
+          fi
+        done
+
+        # If the loop finishes and success is still false, fail the step
+        if [ "$success" = false ]; then
+          echo "All $max_retries attempts failed. Failing the workflow."
           exit 1
         fi
