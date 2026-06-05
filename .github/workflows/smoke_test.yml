@@ -14,7 +14,8 @@ on:
   schedule:
     # Runs at 06:00 UTC every day
     - cron: '0 6 * * *'
-
+  workflow_dispatch:
+  
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
