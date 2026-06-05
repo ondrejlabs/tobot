@@ -232,7 +232,7 @@ For machines that cannot run larger local models or users who don't want to wait
 
 ### Test Data
 
-All validation was performed on real brokerage statements. Test records have not been published in this repository for privacy reasons. If you would like to contribute anonymised statements from brokers not yet covered, please open an issue.
+All validation is performed on real brokerage statements, though test records are excluded from this repository for privacy reasons. A GitHub Actions smoke test runs periodically and after every code change to verify basic functionality—including the availability of the Mistral and Frankfurter APIs—using a private Hugging Face dataset. If you would like to contribute anonymised statements from unsupported brokers, please feel free to reach out.
 
 
 ---
