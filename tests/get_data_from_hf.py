@@ -11,7 +11,7 @@ def download_data():
     try:
         print("Downloading private smoke test data from Hugging Face...")
         snapshot_download(
-            repo_id="your-username/tobot-test-data",
+            repo_id="ondrej-labs/tobot-test-data",
             repo_type="dataset",
             local_dir="./tests/data",
             token=token
