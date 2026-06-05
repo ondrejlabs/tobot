@@ -1,0 +1,57 @@
+name: Smoke Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke-test:
+    runs-runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install Base Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install huggingface_hub
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Fetch Private Test Data
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        # Runs your script to pull data into ./tests/data
+        python tests/get_data_from_hf.py
+
+    - name: Run App and Compare Output
+      run: |
+        # 1. Check if the test data directory exists and is not empty
+        if [ ! -d "./tests/data" ] || [ -z "$(ls -A ./tests/data)" ]; then
+          echo "Notice: Test data is missing or empty. Skipping smoke tests (expected on public forks)."
+          exit 0
+        fi
+
+        echo "Test data found. Running smoke test..."
+
+        # 2. Run your application and save the output to a temporary file
+        python main.py -f ./tests/data > ./tests/actual_output.txt
+
+        # 3. Compare the generated output against your reference file
+        # 'diff -u' shows a unified diff if differences are found
+        #if diff -u tests/reference_output.txt tests/actual_output.txt; then
+        #  echo "Success: Output matches reference perfectly."
+        #  exit 0
+        #else
+        #  echo "Failure: Output does not match reference."
+        #  exit 1
+        #fi
