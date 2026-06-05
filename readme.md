@@ -100,6 +100,7 @@ TOBot is built on a hybrid extraction pipeline designed to maximize accuracy whi
   To enforce consistency:
   TOBot wraps the API response in a simle but strict [Pydantic](https://docs.pydantic.dev/) schema (`TradeExtraction` → `Trade`). The model is instructed to return structured output conforming to this schema directly, which means malformed responses are rejected at the API boundary before they ever reach the calculation phase.
 
+````mermaid
   classDiagram
     direction TB
     
@@ -128,6 +129,7 @@ TOBot is built on a hybrid extraction pipeline designed to maximize accuracy whi
     }
 
     TradeExtraction "1" *-- "many" Trade : contains
+  ````
   
   Beyond schema enforcement, a `model_validator` performs post-extraction arithmetic checks:
   If both `quantity` and `price` are present, the validator independently recalculates the expected transaction value and overwrites any extracted total that deviates significantly — catching silent OCR errors that would otherwise quietly corrupt the final tax figures.
