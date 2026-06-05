@@ -3,8 +3,14 @@ name: Smoke Test
 on:
   push:
     branches: [ main, develop ]
+    paths-ignore:
+      - 'readme.md'
+      - '.gitignore'
   pull_request:
     branches: [ main ]
+    paths-ignore:
+      - 'readme.md'
+      - '.gitignore'
   schedule:
     # Runs at 06:00 UTC every day
     - cron: '0 6 * * *'
