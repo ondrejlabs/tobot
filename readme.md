@@ -99,6 +99,35 @@ TOBot is built on a hybrid extraction pipeline designed to maximize accuracy whi
 
   To enforce consistency:
   TOBot wraps the API response in a simle but strict [Pydantic](https://docs.pydantic.dev/) schema (`TradeExtraction` → `Trade`). The model is instructed to return structured output conforming to this schema directly, which means malformed responses are rejected at the API boundary before they ever reach the calculation phase.
+
+  classDiagram
+    direction TB
+    
+    class TradeExtraction {
+        +Optional~str~ broker
+        +List~Trade~ trades
+        +model_dump() dict
+        +model_validate_json() TradeExtraction
+    }
+    
+    class Trade {
+        +int position
+        +str date
+        +Optional~str~ isin
+        +Optional~str~ ticker
+        +Optional~str~ security_name
+        +float quantity
+        +Optional~float~ price
+        +Optional~float~ value
+        +Optional~float~ fee
+        +Optional~str~ currency
+        +float tax_rate
+        +Optional~str~ extra_info
+        +str original_text
+        +validate_and_clean_data() Trade
+    }
+
+    TradeExtraction "1" *-- "many" Trade : contains
   
   Beyond schema enforcement, a `model_validator` performs post-extraction arithmetic checks:
   If both `quantity` and `price` are present, the validator independently recalculates the expected transaction value and overwrites any extracted total that deviates significantly — catching silent OCR errors that would otherwise quietly corrupt the final tax figures.
@@ -187,7 +216,7 @@ Because TOBot is used as an input to a statutory tax declaration, the accuracy b
 - **Recall** — of the total records present in the reference (and manually validated) set, what fraction did TOBot successfully capture?
 
 Averaged results split by models:
-| Row Labels | CV | Recall | Precision | Response time | Notes
+| Model | CV | Recall | Precision | Response time | Notes
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `mistral-large-latest` | ~0% | 100% | 100% | 40 sec | Reference |
 | `mistral-medium-latest` | ~0% | 100% | 100% | 35 sec |Default (still complete recall and perfect accuracy on testing set) |

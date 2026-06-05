@@ -3,5 +3,6 @@ config.toml
 debug.log
 __pycache__/
 *.pyc
+.python-version
 .env
 .vscode/
