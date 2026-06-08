@@ -106,10 +106,10 @@ class AppController:
                     if self.view:
                         self.view.update_progress(pdf_path.name, index, total_files)
 
-                    logger.info(f"Started processing file '{pdf_path.name}'")
+                    logger.info(f"Started processing file ({index}/{total_files}) '{pdf_path.name}'")
                     #run_extraction_job(pdf_path, api_choice, model_choice, converter) # Docling version
                     run_extraction_job(pdf_path, api_choice, model_choice)
-                    logger.info("Finished processing file")
+                    logger.info(f"Finished processing file ({index}/{total_files})")
 
                 logger.info("Finished extraction phase.")
             else:
