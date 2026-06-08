@@ -92,3 +92,15 @@ jobs:
           echo "All $max_retries attempts failed. Failing the workflow."
           exit 1
         fi
+
+    # Archive important files
+    - name: Archive test results and artifacts
+      uses: actions/upload-artifact@v4
+      if: always() # Crucial: Runs even if the previous step hits 'exit 1'
+      with:
+        name: smoke-test-artifacts
+        path: |
+          ${{ github.workspace }}/**/*.json
+          ${{ github.workspace }}/**/*.txt
+          ${{ github.workspace }}/**/*.csv
+        retention-days: 5
