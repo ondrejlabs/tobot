@@ -55,12 +55,10 @@ def run_transaction_job(folder_path: str | Path) -> str:
                 f"Skipping row {index} due to missing/invalid exchange rate. "
                 f"Currency evaluated: '{row['currency']}'. Row data: {row.to_dict()}"
             )
-        # Drop the invalid rows from the main DataFrame
-        assert isinstance(df, pd.DataFrame)
-        df = df.dropna(subset=['fx_rate']).reset_index(drop=True)
-        logger.warning(f"Dropped {invalid_rates_mask.sum()} rows with invalid exchange rates. {len(df)} rows remaining.")
+        logger.warning(f"Flagged {invalid_rates_mask.sum()} rows with invalid exchange rates. They will appear as FAILED in the output.")
 
-    # Create the new 'tax' column using vectorized arithmetic (now safe from NaNs)
+    # Create the new 'tax' column using vectorized arithmetic
+    # (If fx_rate is NaN, tax will automatically become NaN safely)
     df['tax'] = df['value'] / df['fx_rate'] * df['tax_rate']
     assert isinstance(df, pd.DataFrame)
 
@@ -112,13 +110,18 @@ def run_transaction_job(folder_path: str | Path) -> str:
             .assign(
                 value=lambda x: x['value'].map(lambda v: locale.format_string("%.2f", v, grouping=True)),
                 fee=lambda x: x['fee'].map(lambda f: locale.format_string("%.2f", f, grouping=True)),
-                fx_rate=lambda x: x['fx_rate'].map(lambda fx: locale.format_string("%.4f", fx, grouping=True)),
-                tax=lambda x: x['tax'].map(lambda t: locale.format_string("%.2f", t, grouping=True))
+                
+                # Intercept NaN values and print a highly visible "FAILED" string
+                fx_rate=lambda x: x['fx_rate'].map(
+                    lambda fx: "FAILED" if pd.isna(fx) else locale.format_string("%.4f", fx, grouping=True)
+                ),
+                tax=lambda x: x['tax'].map(
+                    lambda t: "FAILED" if pd.isna(t) else locale.format_string("%.2f", t, grouping=True)
+                )
             )
             .to_string(index=False)
         )
         summary_output.append(transactions_str)
-        summary_output.append("")
 
     # Save the summary to a text file in the same folder
     summary_filename = f'tob_summary_{target_period}.txt'

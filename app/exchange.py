@@ -1,14 +1,35 @@
 # Standard library imports
 from datetime import date, datetime
 from functools import lru_cache
-import requests
 import warnings
+
+# Third-party imports
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+# 1. Initialize a global session with built-in retry and backoff logic
+http_session = requests.Session()
+
+# Configure retries: 3 total retries, waiting 1s, 2s, 4s between them.
+# It will automatically retry on common server/gateway errors.
+retries = Retry(
+    total=3,
+    backoff_factor=1,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"]
+)
+
+# Mount the retry adapter to the session
+http_session.mount('https://', HTTPAdapter(max_retries=retries))
+
 
 @lru_cache(maxsize=None)
 def get_fx_rate(target_date, currency):
     """
     Fetches the exchange rate for a specific currency against EUR on a given date.
-
+    Uses a persistent session with automatic retries for network resilience.
+    
     Args:
         target_date (str, date, datetime): The date to query (format: 'YYYY-MM-DD').
         currency (str): The 3-letter currency code (e.g., 'USD', 'GBP').
@@ -42,7 +63,8 @@ def get_fx_rate(target_date, currency):
 
     # 3. Execute and Handle Errors
     try:
-        response = requests.get(url, timeout=10)
+        # Use the robust global session
+        response = http_session.get(url, timeout=10)
 
         # Will raise an HTTPError for 4xx or 5xx status codes
         response.raise_for_status()
@@ -74,7 +96,7 @@ def get_fx_rate(target_date, currency):
         return None
 
     except requests.exceptions.Timeout:
-        warnings.warn("Network Error: The API request timed out.")
+        warnings.warn("Network Error: The API request timed out after multiple retries.")
         return None
 
     except requests.exceptions.RequestException as req_err:
