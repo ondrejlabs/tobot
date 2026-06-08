@@ -90,14 +90,32 @@ def process_pdf(file_path, model_choice) -> str:
                 purpose="ocr"
             )
 
-        # Get a signed URL for the uploaded file (required for the OCR endpoint)
-        signed_url = client.files.get_signed_url(file_id=uploaded_file.id)
-        logger.info("Finished file upload")
-
+        # Get a signed URL for the uploaded file, handling Mistral backend race conditions
+        max_retries = 3
+        retry_delay = 2
+        signed_url = None
+        
+        for attempt in range(max_retries):
+            try:
+                # Get a signed URL for the uploaded file (required for the OCR endpoint)
+                signed_url = client.files.get_signed_url(file_id=uploaded_file.id)
+                logger.info("Finished file upload and retrieved signed URL")
+                break  # Exit loop if successful
+            except Exception as e:
+                # If we get a 404, wait and retry. Otherwise, or if out of retries, raise the error.
+                if "404" in str(e) and attempt < max_retries - 1:
+                    logger.warning(f"Mistral storage delay (404). Retrying in {retry_delay}s... (Attempt {attempt + 1}/{max_retries})")
+                    time.sleep(retry_delay)
+                else:
+                    raise e
+        
     # We don't want to continue processing if the upload or OCR fails (is not safe to skip a single file)
     except Exception as e:
         logger.error(f"Failed to upload file: {e}")
         raise 
+    
+    if not signed_url:
+        raise ValueError("Signed URL was not successfully generated. Cannot proceed with OCR.")
     
     try:
         # Call the Chat Completion
