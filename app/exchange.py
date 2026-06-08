@@ -11,12 +11,18 @@ from urllib3.util.retry import Retry
 # 1. Initialize a global session with built-in retry and backoff logic
 http_session = requests.Session()
 
+# Add a standard browser User-Agent
+http_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json"
+})
+
 # Configure retries: 3 total retries, waiting 1s, 2s, 4s between them.
 # It will automatically retry on common server/gateway errors.
 retries = Retry(
     total=3,
     backoff_factor=1,
-    status_forcelist=[429, 500, 502, 503, 504],
+    status_forcelist=[429, 500, 502, 503, 504, 520],
     allowed_methods=["GET"]
 )
 
