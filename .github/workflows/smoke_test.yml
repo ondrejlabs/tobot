@@ -60,7 +60,7 @@ jobs:
         cp -f ./tests/mapping.csv ./mapping.csv
 
         # --- Retry Logic Initialization ---
-        max_retries=2
+        max_retries=1
         attempt=1
         success=false
 
