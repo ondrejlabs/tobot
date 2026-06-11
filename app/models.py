@@ -171,9 +171,19 @@ def process_pdf(file_path, model_choice) -> str:
         return json.dumps(extracted_trades, indent=4, ensure_ascii=False)
 
     except Exception as e:
-        logger.error(f"Error analyzing {file_path.name}: {e}")
-        raise
-
+        # Extract the string representation to check for the 429 status code
+        error_msg = str(e)
+        
+        # Check for 429 dynamically (handles both standard exceptions and SDKError objects)
+        is_rate_limit = "429" in error_msg or getattr(e, "raw_status_code", getattr(e, "status_code", None)) == 429
+        
+        if is_rate_limit:
+            logger.error(f"Rate limit exceeded (API response code 429) for {file_path.name}.")
+            logger.critical("Mistral service tier capacity reached. Consider changing the used model or opting for a subscription plan.")
+            # Not raising possible issue here as we want to continue to the next file, rather than crashing the whole batch.
+        else:
+            logger.error(f"Error analyzing {file_path.name}: {e}")
+            raise
     finally:
         # 4. Cleanup: This will ALWAYS run for each file
         logger.info("Deleting file from Mistral cloud")
