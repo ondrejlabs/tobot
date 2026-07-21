@@ -40,6 +40,8 @@ class AppController:
             # Attach the custom log sink to send logs to the GUI
             logger.add(GUILogSink(self.view.handle_log_message))
 
+        logger.info(f"Configuration file location: {CONFIG_PATH}")
+
         # Optionally check MISTRAL_API_KEY value
         if self.api_choice  == "Mistral Cloud" and not CONFIG.get("mistral_api_key") and not os.getenv("MISTRAL_API_KEY"):
             logger.warning(f"MISTRAL_API_KEY is neither defined in {CONFIG_PATH} nor in system variables. Accessing Mistral API will fail.")

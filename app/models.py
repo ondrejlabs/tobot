@@ -181,6 +181,7 @@ def process_pdf(file_path, model_choice) -> str:
             logger.error(f"Rate limit exceeded (API response code 429) for {file_path.name}.")
             logger.critical("Mistral service tier capacity reached. Consider changing the used model or opting for a subscription plan.")
             # Not raising possible issue here as we want to continue to the next file, rather than crashing the whole batch.
+            return ""
         else:
             logger.error(f"Error analyzing {file_path.name}: {e}")
             raise

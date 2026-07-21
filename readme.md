@@ -95,6 +95,76 @@ TOBot is built on a hybrid extraction pipeline designed to maximize accuracy whi
   **Docling (Evaluated but Excluded for the time being):** [Docling](https://github.com/DS4SD/docling) (an ML-based markdown toolkit) was implemented and tested and remains available in the codebase as an option. However, because it introduced massive dependencies without providing a major improvement to final precision over the chosen plain-text-plus-visual approach, it was not included directly.
 
 
+
+````mermaid
+%%{init: {"theme": "base", "themeVariables": { "primaryTextColor": "#222", "lineColor": "#666", "fontSize": "16px"}}}%%
+graph TD
+    %% Base input
+    Start([PDF File Input])
+
+    %% Initial Step common to both functions
+    Start --> B[["extract_text_locally<br>(uses pdfplumber)"]]
+    
+    B --> TextBuffer([Extracted Text Layer Buffer])
+
+    %% Branch point
+    Start --> ModeCheck{"run_extraction_job<br>(Mode Check)"}
+
+    %% --- Cloud Path ---
+    ModeCheck -- "Mode == Mistral Cloud" --> CloudF1[["process_pdf<br>(Mistral Client)"]]
+    
+    Start -.-> CloudF1
+    
+    CloudF1 --> C_Upload[["client.files.upload<br>(purpose='ocr')"]]
+    
+    C_Upload --> C_Sign["client.files.get_signed_url"]
+    
+    C_Sign --> C_Url([Signed PDF Document URL])
+
+    %% Feeding data into Cloud Model
+    C_Url --> CloudModel[["client.chat.parse<br>(Mistral Model)"]]
+    TextBuffer --> CloudModel
+
+    %% --- Local Path ---
+    ModeCheck -- "Mode == Locally" --> LocalF1[["process_pdf_locally<br>(OpenAI/Local Client)"]]
+    
+    Start -.-> LocalF1
+
+    LocalF1 --> L_Convert[["fitz/PyMuPDF open<br>& get_pixmap"]]
+    
+    L_Convert --> L_B64[["Convert to bytes<br>& base64 encode"]]
+    
+    L_B64 --> L_Images(["Sequence of Base64 Images<br>(data:image/png;base64, ...)"])
+
+    %% Feeding data into Local Model
+    L_Images --> LocalModel[["client.chat.completions.parse<br>(Local Multimodal Model)"]]
+    TextBuffer --> LocalModel
+
+    %% --- Post Processing & Consolidation ---
+    
+    CloudModel --> Parse1["Pydantic model_dump"]
+    LocalModel --> Parse1
+    
+    Parse1 --> Valid[["TradeExtraction<br>@model_validator"]]
+    
+    Valid --> End([Extracted JSON Output File])
+
+    %% Optional styling for distinction
+    style Start fill:#f9f,stroke:#333,stroke-width:2px;
+    style End fill:#ccf,stroke:#333,stroke-width:2px;
+    
+    subgraph CloudPipeline [Mistral Cloud Path]
+    style CloudPipeline fill:#e0f7fa,stroke:#b2ebf2;
+    CloudF1;C_Upload;C_Sign;C_Url;CloudModel;
+    end
+    
+    subgraph LocalPipeline [Local Path]
+    style LocalPipeline fill:#fff3e0,stroke:#ffe0b2;
+    LocalF1;L_Convert;L_B64;L_Images;LocalModel;
+    end
+
+````
+
 * **Pydantic Validation Layer:** Raw LLM output is inherently unpredictable — even a well-prompted model can occasionally return a misformatted number, omit a required field, or hallucinate a value that conflicts with other fields in the same row.
 
   To enforce consistency:
