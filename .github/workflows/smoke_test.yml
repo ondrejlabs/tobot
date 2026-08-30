@@ -68,7 +68,7 @@ jobs:
           echo "--- Attempt $attempt of $max_retries ---"
           
           # Run the application and save the output to a temporary file
-          python main.py -f ./tests/data -m "mistral-large-latest" > ./tests/actual_output.txt
+          python main.py -f ./tests/data -m "mistral-medium-latest" > ./tests/actual_output.txt
 
           # Compare the "Total Tax:" lines against the reference file
           if diff -u <(grep "Total Tax:" tests/reference_output.txt | sort) <(grep "Total Tax:" tests/actual_output.txt | sort); then
